@@ -89,30 +89,68 @@
 <script>
 const scriptURL = "https://script.google.com/macros/s/AKfycbyMZTT8_a6ozJsEmC242KH-mR6sjgwjtcCw7SpGk2HxEgUwdIiuFPGhBltszDHVeg7_rQ/exec";
 
-fetch(scriptURL)
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("listPegawai");
+let selected = null;
 
-    data.forEach(row => {
-      const p = {
-        nama: row[0],
-        nip: row[1],
-        unit: row[2]
-      };
+// ================== LOAD DATA PEGAWAI ==================
+function loadPegawai() {
+  fetch(scriptURL)
+    .then(res => res.json())
+    .then(data => {
+      console.log("DATA PEGAWAI:", data);
 
-      const div = document.createElement("div");
-      div.className = "pegawai";
-      div.innerText = p.nama;
+      const container = document.getElementById("listPegawai");
+      container.innerHTML = "";
 
-      div.onclick = () => bukaTTD(p);
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p>Data pegawai kosong</p>";
+        return;
+      }
 
-      container.appendChild(div);
+      data.forEach(row => {
+        const p = {
+          nama: row[0],
+          nip: row[1],
+          unit: row[2]
+        };
+
+        const div = document.createElement("div");
+        div.className = "pegawai";
+        div.innerText = p.nama;
+
+        div.onclick = () => bukaTTD(p);
+
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      console.error("ERROR FETCH:", err);
+      document.getElementById("listPegawai").innerHTML =
+        "<p style='color:red'>Gagal ambil data dari server</p>";
     });
-  });
+}
+
+// Panggil saat halaman load
+loadPegawai();
+
+
+// ================== SIGNATURE ==================
 let canvas = document.getElementById("signatureCanvas");
 let signaturePad = new SignaturePad(canvas);
 
+// Fix ukuran canvas
+function resizeCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = canvas.offsetHeight * ratio;
+  canvas.getContext("2d").scale(ratio, ratio);
+  signaturePad.clear();
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+
+// ================== MODAL ==================
 function bukaTTD(p) {
   selected = p;
   document.getElementById("namaPegawai").innerText = p.nama;
@@ -127,7 +165,14 @@ function clearPad() {
   signaturePad.clear();
 }
 
+
+// ================== SIMPAN ABSENSI ==================
 function simpan() {
+  if (!selected) {
+    alert("Pilih pegawai dulu!");
+    return;
+  }
+
   if (signaturePad.isEmpty()) {
     alert("Tanda tangan dulu!");
     return;
@@ -138,6 +183,7 @@ function simpan() {
   fetch(scriptURL, {
     method: "POST",
     body: JSON.stringify({
+      mode: "absen",
       nama: selected.nama,
       nip: selected.nip,
       unit: selected.unit,
@@ -147,12 +193,20 @@ function simpan() {
   .then(res => res.json())
   .then(res => {
     alert("Absensi berhasil!");
+
+    // tutup modal
     tutup();
     signaturePad.clear();
+
+    // reload data (opsional)
+    loadPegawai();
   })
-  .catch(err => alert("Error: " + err));
+  .catch(err => {
+    console.error(err);
+    alert("Gagal kirim data!");
+  });
 }
 </script>
-
+  
 </body>
 </html>
