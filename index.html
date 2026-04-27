@@ -93,7 +93,7 @@ let selected = null;
 
 // ================== LOAD DATA PEGAWAI ==================
 function loadPegawai() {
-  fetch(scriptURL)
+  fetch(scriptURL + "?type=pegawai")
     .then(res => res.json())
     .then(data => {
       console.log("DATA PEGAWAI:", data);
