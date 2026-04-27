@@ -87,28 +87,29 @@
 </div>
 
 <script>
-const scriptURL = "PASTE_URL_APPS_SCRIPT_DISINI";
+const scriptURL = "URL_APPS_SCRIPT_KAMU";
 
-const pegawai = [
-  {nama:"Budi", nip:"123", unit:"BKPSDM"},
-  {nama:"Siti", nip:"124", unit:"BKPSDM"},
-  {nama:"Ahmad", nip:"125", unit:"BKPSDM"}
-];
+fetch(scriptURL)
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("listPegawai");
 
-let selected = null;
+    data.forEach(row => {
+      const p = {
+        nama: row[0],
+        nip: row[1],
+        unit: row[2]
+      };
 
-const container = document.getElementById("listPegawai");
+      const div = document.createElement("div");
+      div.className = "pegawai";
+      div.innerText = p.nama;
 
-pegawai.forEach(p => {
-  const div = document.createElement("div");
-  div.className = "pegawai";
-  div.innerText = p.nama;
+      div.onclick = () => bukaTTD(p);
 
-  div.onclick = () => bukaTTD(p);
-
-  container.appendChild(div);
-});
-
+      container.appendChild(div);
+    });
+  });
 let canvas = document.getElementById("signatureCanvas");
 let signaturePad = new SignaturePad(canvas);
 
